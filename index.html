@@ -1,32 +1,62 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>veritabani.tr - Alan Adı Bilgilendirme</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
-        .notice { background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; font-weight: bold; text-align: center; margin-bottom: 25px; border: 1px solid #ffeeba; }
-        h2 { color: #1a252f; font-size: 1.25rem; margin-top: 25px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        p { margin-bottom: 15px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yükleniyor...</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }
+    h1 { color: #111; margin-bottom: 20px; }
+    .meta { font-size: 0.9em; color: #666; margin-bottom: 30px; }
+    .content { font-size: 1.1em; white-space: pre-line; }
+    .loading { text-align: center; padding: 50px; color: #888; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="notice">
-            BU ALAN ADI SATILIK DEĞİLDİR<br>
-            THIS DOMAIN NAME IS ABSOLUTELY NOT FOR SALE
-        </div>
+  <div id="app">
+    <div class="loading">İçerik yükleniyor...</div>
+  </div>
 
-        <h2>📌 Gelecek Proje Beyanı (Kâr Amacı Gütmeyen Proje)</h2>
-        <p>Bu alan adı (<strong>veritabani.tr</strong>); veritabanı yönetim sistemleri (DBMS), ilişkisel veritabanı mimarileri (SQL/NoSQL), büyük veri analitiği, veri güvenliği ve açık kaynaklı veritabanı teknolojileri konularında akademik ve teknik bilgilendirici içerikler sunacak, tamamen kâr amacı gütmeyen bağımsız bir "Veritabanı Teknolojileri ve Veri Mimarisi Arşivi" projesi için rezerve edilmiştir. Sitenin altyapı çalışmaları devam etmektedir.</p>
+  <script>
+    const SUPABASE_URL = 'https://eawwgvklwuhqsbwwcqdc.supabase.co'; // Proje URL'in
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhd3dndmtsd3VocXNid3djcWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NTU5NjcsImV4cCI6MjEwNTMzMTk2N30.sySmKTHrMxdhB7locmhUQqwjoWK2Sipqlxxqo7Slc7I'; // Anon/Public Key
 
-        <h2>⚖️ Kesin Bağlantısızlık Beyanı (Hukuki Uyarı)</h2>
-        <p>Bu web sitesi ve alan adının; hiçbir yazılım şirketi, veritabanı sağlayıcısı, bulut bilişim firması, veri merkezi, ulusal veya uluslararası holding ya da tescilli ticari marka ile hiçbir organik bağı, ortaklığı, acenteliği ya da ticari ilişkisi bulunmamaktadır. Bu adreste veri tabanı/yazılım satışı yapılmaz, sunucu/bulut hizmeti verilmez ve ticari hiçbir faaliyet yürütülmez.</p>
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        <h2>💡 Kötü Niyet Bulunmadığına Dair Taahhüt (İyi Niyet Beyanı)</h2>
-        <p>Bu alan adı, teknoloji ve yazılım sektöründeki ticari markaların itibarından faydalanma, haksız rekabet yaratma veya kullanıcıları resmi bir yazılım/veri sağlayıcısıymış gibi yanıltma amacı taşımaksızın; tamamen jenerik, bilimsel ve teknik terminoloji (veritabanı) çerçevesinde tescil edilmiştir. Alan adı üzerinden doğrudan veya dolaylı olarak hiçbir ticari teklif, satın alma veya devir talebi kabul edilmeyecektir.</p>
-    </div>
+    async function loadArticle() {
+      const today = new Date().toISOString().split('T')[0];
+      let domain = window.location.hostname.replace('www.', '');
+
+      // Yerel testlerde veya GitHub Pages alt alan adlarında varsayılan test domaini
+      if (domain === 'localhost' || domain.includes('github.io')) {
+        domain = 'riyadhair.com.tr'; 
+      }
+
+      const { data, error } = await supabase
+        .from('articles')
+        .select('title, content, created_at')
+        .eq('domain', domain)
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const appEl = document.getElementById('app');
+
+      if (error || !data) {
+        appEl.innerHTML = '<h1>İçerik Bulunamadı</h1><p>Bu alan adı için henüz yayınlanmış bir yazı bulunmuyor.</p>';
+        return;
+      }
+
+      document.title = data.title;
+      appEl.innerHTML = `
+        <h1>${data.title}</h1>
+        <div class="meta">Yayınlanma Tarihi: ${new Date(data.created_at).toLocaleDateString('tr-TR')}</div>
+        <div class="content">${data.content}</div>
+      `;
+    }
+
+    loadArticle();
+  </script>
 </body>
 </html>
